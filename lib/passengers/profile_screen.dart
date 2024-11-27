@@ -34,7 +34,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/passenger-details'),
+        Uri.parse('http://192.168.1.69:5000/passenger-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',

@@ -38,7 +38,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('http://192.168.1.70:5000/check_rating?booking_id=${widget.bookingId}'),
+      Uri.parse('http://192.168.1.69:5000/check_rating?booking_id=${widget.bookingId}'),
       headers: {
         'Authorization': 'Bearer $token', // Include the token in the headers
       },
@@ -62,7 +62,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.post(
-      Uri.parse('http://192.168.1.70:5000/rate_driver'),
+      Uri.parse('http://192.168.1.69:5000/rate_driver'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include the token in the headers

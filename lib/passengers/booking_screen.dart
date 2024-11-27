@@ -27,18 +27,21 @@ class _BookingScreenState extends State<BookingScreen> {
     _fetchLoggedInPassengerId();
   }
 
-  Future<void> _fetchLoggedInPassengerId() async {
-    final storage = FlutterSecureStorage();
-    String? passengerId = await storage.read(key: 'passenger_id');
-    setState(() {
-      _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
-    });
-  }
+Future<void> _fetchLoggedInPassengerId() async {
+  final storage = FlutterSecureStorage();
+  String? passengerId = await storage.read(key: 'passenger_id');
+  print('Fetched passenger ID: $passengerId'); // Debugging line
+  
+  setState(() {
+    _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
+  });
+}
+
 
   Future<void> _fetchLocations() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/locations'),
+        Uri.parse('http://192.168.1.69:5000/locations'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -68,10 +71,10 @@ class _BookingScreenState extends State<BookingScreen> {
       _isLoading = true; // Start loading indicator
     });
 
-    final url = Uri.parse(
-        'http://192.168.1.70:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination');
+    final url =  Uri.parse(
+        'http://192.168.1.69:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination');
     
-    const token = 'auth_token'; // Replace with the actual JWT token
+const token = 'token'; // Replace with the actual JWT token
 
     try {
       final response = await http.get(

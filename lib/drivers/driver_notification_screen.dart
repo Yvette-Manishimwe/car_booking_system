@@ -26,7 +26,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/driver-notifications'),
+        Uri.parse('http://192.168.1.69:5000/driver-notifications'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -54,14 +54,14 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.post(
-        Uri.parse('http://192.168.1.70:5000/send-message'),
+        Uri.parse('http://192.168.1.69:5000/send-message'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: json.encode({
           'notification_id': notificationId,
-          'trip_id': tripId, // Pass trip ID to link the message
+          'trip_id': tripId,
           'message': message,
         }),
       );
@@ -70,7 +70,6 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Message sent successfully')),
         );
-        // Update UI or notification state (mark as read, etc.)
       } else {
         throw Exception('Failed to send message');
       }
@@ -88,10 +87,22 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Send Message'),
-          content: TextField(
-            controller: messageController,
-            decoration: const InputDecoration(hintText: 'Enter your message here'),
+          title: const Text('Booking Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Passenger: ${notification.passengerName}'),
+              Text('Phone: ${notification.passengerPhone}'),
+              Text('From: ${notification.departure}'),
+              Text('To: ${notification.destination}'),
+              const SizedBox(height: 10),
+              const Text('Send a Message:'),
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(hintText: 'Enter your message'),
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -115,99 +126,32 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     );
   }
 
-  // Navigation between bottom navigation items
-  void _onItemTapped(int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/');
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/add-trip');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/earning');
-        break;
-      case 3:
-        // Stay on the Notification screen
-        break;
-      case 4:
-        Navigator.pushNamed(context, '/account');
-        break;
-    }
-  }
-
-  Future<bool> _onWillPop() async {
-    Navigator.pushReplacementNamed(context, '/');
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Driver Notifications'),
-        ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : notifications.isEmpty
-                ? const Center(child: Text('No notifications found'))
-                : ListView.builder(
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = notifications[index];
-                      return ListTile(
-                        title: Text(notification.message),
-                        subtitle: Text(notification.timestamp),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(notification.isRead ? Icons.check : Icons.mark_as_unread),
-                            IconButton(
-                              icon: const Icon(Icons.check_circle),
-                              onPressed: () {
-                                _showSendMessageDialog(notification);
-                              },
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          // Handle on-tap action, e.g., mark notification as read
-                        },
-                      );
-                    },
-                  ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: 3,
-          onTap: _onItemTapped,
-          selectedItemColor: Colors.blue,
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle),
-              label: 'Add Trip',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.monetization_on),
-              label: 'Earnings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: 'Notifications',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle),
-              label: 'Account',
-            ),
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Driver Notifications'),
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : notifications.isEmpty
+              ? const Center(child: Text('No notifications found'))
+              : ListView.builder(
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    final notification = notifications[index];
+                    return ListTile(
+                      title: Text(notification.message),
+                      subtitle: Text(notification.timestamp),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.message),
+                        onPressed: () {
+                          _showSendMessageDialog(notification);
+                        },
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

@@ -18,55 +18,63 @@ class _LoginsScreenState extends State<LoginsScreen> {
   String? _errorMessage;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  Future<void> _login() async {
-    setState(() {
-      _isLoggingIn = true; // Show loading indicator
-      _errorMessage = null; // Reset any previous error message
-    });
+Future<void> _login() async {
+  setState(() {
+    _isLoggingIn = true;
+    _errorMessage = null;
+  });
 
-    try {
-      // Prepare the login data
-      final Map<String, String> loginData = {
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      };
+  try {
+    // Prepare the login data
+    final Map<String, String> loginData = {
+      'email': _emailController.text,
+      'password': _passwordController.text,
+    };
 
-      // Send the login request to the API
-      final response = await http.post(
-        Uri.parse('http://192.168.1.70:5000/login-passenger'), // Your API endpoint
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(loginData),
-      );
+    // Send the login request to the API
+    final response = await http.post(
+      Uri.parse('http://192.168.1.75:5000/login-passenger'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(loginData),
+    );
 
-      // Check for success
-      if (response.statusCode == 200) {
-        // Parse response and store token if available
-        final responseData = json.decode(response.body);
-        final token = responseData['token']; // Assuming your API returns a token
+    // Check for success
+    if (response.statusCode == 200) {
+      // Parse response and store token if available
+      final responseData = json.decode(response.body);
+      final token = responseData['token']; // Assuming your API returns a token
+      final passengerId = responseData['passenger_id']; // Assuming your API returns passenger_id
+      print('Fetched passenger ID: $passengerId');
 
-        // Store the token securely
-        await _storage.write(key: 'token', value: token);
+      // Store the token and passenger ID securely
+      await _storage.write(key: 'token', value: token);
+     if (passengerId != null) {
+  await _storage.write(key: 'passenger_id', value: passengerId.toString());
+  final storedPassengerId = await _storage.read(key: 'passenger_id');
+  print('Stored passenger ID in secure storage: $storedPassengerId');
+}
 
-        // Navigate to the passenger dashboard or main screen
-        Navigator.of(context).pushReplacementNamed('/passenger_home');
-      } else {
-        // Handle errors based on response
-        final errorResponse = json.decode(response.body);
-        setState(() {
-          _errorMessage = errorResponse['message'] ?? 'Login failed. Please try again.';
-        });
-      }
-    } catch (error) {
+      // Navigate to the passenger dashboard or main screen
+      Navigator.of(context).pushReplacementNamed('/passenger_home');
+    } else {
+      // Handle errors based on response
+      final errorResponse = json.decode(response.body);
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
-      });
-      print('Login error: $error');
-    } finally {
-      setState(() {
-        _isLoggingIn = false; // Hide loading indicator
+        _errorMessage = errorResponse['message'] ?? 'Login failed. Please try again.';
       });
     }
+  } catch (error) {
+    setState(() {
+      _errorMessage = 'An error occurred. Please try again.';
+    });
+    print('Login error: $error');
+  } finally {
+    setState(() {
+      _isLoggingIn = false;
+    });
   }
+}
+
 
   @override
   void dispose() {

@@ -35,7 +35,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
 
       // Perform the HTTP GET request to fetch earnings data
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/earnings'),
+        Uri.parse('http://192.168.1.69:5000/earnings'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',

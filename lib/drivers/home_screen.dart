@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch the list of trips from the server
   Future<void> fetchTrips() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.70:5000/trips'));
+      final response = await http.get(Uri.parse('http://192.168.1.69:5000/trips'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);

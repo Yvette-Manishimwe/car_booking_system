@@ -51,7 +51,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/bookings'),
+        Uri.parse('http://192.168.1.69:5000/bookings'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -174,6 +174,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                             Text('Available Seats: ${booking['available_seats']}'),
                             Text('Booking Time: ${booking['booking_time']}'),
                             Text('Amount: \$${amount.toStringAsFixed(2)}'), // Display the amount correctly
+                            Text('Booked seats: ${booking['booked_seats']}'),
                           ],
                         ),
                         trailing: ElevatedButton(

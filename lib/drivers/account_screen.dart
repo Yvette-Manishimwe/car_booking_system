@@ -34,7 +34,7 @@ class _AccountScreenState extends State<AccountScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.70:5000/driver-details'),
+        Uri.parse('http://192.168.1.69:5000/driver-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
