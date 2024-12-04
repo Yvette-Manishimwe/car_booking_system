@@ -7,15 +7,15 @@ import 'booking_screen.dart'; // Import your BookingScreen
 import 'notifications_screen.dart'; // Import your NotificationsScreen
 import 'profile_screen.dart'; // Import your ProfileScreen
 
-class PassengerHomeScreen extends StatefulWidget {
-  const PassengerHomeScreen({Key? key}) : super(key: key);
+class HomePaymentScreenTwo extends StatefulWidget {
+  const HomePaymentScreenTwo({Key? key}) : super(key: key);
 
   @override
-  _PassengerHomeScreenState createState() => _PassengerHomeScreenState();
+  _HomePaymentScreenTwoState createState() => _HomePaymentScreenTwoState();
 }
 
-class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
-  int _selectedIndex = 0;
+class _HomePaymentScreenTwoState extends State<HomePaymentScreenTwo> {
+  int _selectedIndex = 2;
   List<Map<String, dynamic>> bookings = [];
   bool isLoading = true;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -84,14 +84,8 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   }
 
   // Navigate to PaymentScreen with bookingId
-  void navigateToPaymentScreen(int bookingId, int tripId, String driverName, String destination, double amount, int driverId) async {
-    if (amount <= 0) {
-      print('Invalid amount: $amount for Trip ID: $tripId');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid payment amount.')),
-      );
-      return;
-    }
+  void navigateToPaymentScreen(int bookingId, int tripId, String driverName, String destination, int driverId) async {
+ 
 
     // Proceed to the payment screen
     Navigator.push(
@@ -102,7 +96,6 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         
           driverName: driverName,
           destination: destination,
-          amount: amount,
           
         ),
       ),
@@ -113,17 +106,19 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   void _onItemTapped(int index) {
     switch (index) {
       case 0: // Home
-        setState(() {
-          _selectedIndex = index; // Update selected index
-        });
+         Navigator.pushReplacementNamed(context, '/');
         break;
       case 1: // Booking
         Navigator.pushReplacementNamed(context, '/booking');
         break;
-      case 2: // Notifications
+      case 2:
+               setState(() {
+          _selectedIndex = index; // Update selected index
+        });
+      case 3: // Notifications
         _navigateToNotifications(); // Navigate to notifications
         break;
-      case 3: // Account
+      case 4: // Account
         Navigator.pushReplacementNamed(context, '/profile'); // Navigate to ProfileScreen
         break;
       default:
@@ -146,15 +141,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   itemBuilder: (context, index) {
                     final booking = bookings[index];
 
-                    // Safely fetch the amount ensuring it's a valid number
-                    double amount = 0.0;
-                    if (booking['amount'] != null) {
-                      try {
-                        amount = double.parse(booking['amount'].toString());
-                      } catch (e) {
-                        print('Error parsing amount: $e');
-                      }
-                    }
+                    
 
                     // Assuming the driver ID is available in the booking object
                     int driverId = booking['driver_id'] ?? 0; // Use 0 as default if not available
@@ -173,7 +160,6 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                             Text('Departure: ${booking['departure_location']}'),
                             Text('Available Seats: ${booking['available_seats']}'),
                             Text('Booking Time: ${booking['booking_time']}'),
-                            Text('Amount: \$${amount.toStringAsFixed(2)}'), // Display the amount correctly
                             Text('Booked seats: ${booking['booked_seats']}'),
                           ],
                         ),
@@ -184,7 +170,6 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                               booking['trip_id'],
                               booking['driver_name'],
                               booking['destination'],
-                              amount,
                               driverId, // Pass the driver ID here
                             );
                           },
@@ -197,7 +182,8 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Booking'),
+          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Booking'),
+          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],

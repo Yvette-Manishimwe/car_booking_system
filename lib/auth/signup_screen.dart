@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,7 +19,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _phoneController = TextEditingController();
 
   bool _isSubmitting = false;
-  String _selectedCategory = 'Passenger'; // Default category
+  bool _isPasswordVisible = false;
+  String _selectedCategory = 'Passenger';
+  File? _profileImage;
+
+  final String baseUrl = 'http://192.168.1.69:5000'; // Base URL for backend
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
@@ -25,7 +31,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _isSubmitting = true;
       });
 
-      Map<String, dynamic> userData = {
+      // Prepare the form data, including the image
+      final userData = {
         'name': _nameController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
@@ -33,51 +40,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'category': _selectedCategory,
       };
 
+      // Create the multipart request
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/register'));
+      request.fields.addAll(userData);
+
+      if (_profileImage != null) {
+        // Add the profile image to the request
+        request.files.add(await http.MultipartFile.fromPath('profile_picture', _profileImage!.path));
+      }
+
       try {
-        print("Request Body: ${json.encode(userData)}");
-
-        final response = await http.post(
-          Uri.parse('http://192.168.1.75:5000/register'),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(userData),
-        ).timeout(
+        final response = await request.send().timeout(
           const Duration(seconds: 10),
-          onTimeout: () {
-            setState(() {
-              _isSubmitting = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Request timed out. Please try again.')),
-            );
-            return http.Response('Error', 408);
-          },
+          onTimeout: () => throw Exception('Request timeout'),
         );
-
-        print("Response Status: ${response.statusCode}");
-        print("Response Body: ${response.body}");
 
         setState(() {
           _isSubmitting = false;
         });
 
-        if (response.statusCode == 200) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registration successful!')),
           );
 
           // Redirect based on the selected category
-          if (_selectedCategory == 'Driver') {
-            Navigator.of(context).pushReplacementNamed('/login');
-          } else if (_selectedCategory == 'Passenger') {
-            Navigator.of(context).pushReplacementNamed('/signin');
-          }
+          Navigator.of(context).pushReplacementNamed(
+            _selectedCategory == 'Driver' ? '/login' : '/signin',
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration failed')),
+            const SnackBar(content: Text('Registration failed.')),
           );
         }
       } catch (e) {
-        print("Error occurred: $e");
         setState(() {
           _isSubmitting = false;
         });
@@ -86,6 +82,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     }
+  }
+
+  // Function to pick the profile picture
+  Future<void> _pickProfileImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  // Function to handle continue as passenger or driver button press
+  void _continueAs(String category) {
+    Navigator.pushReplacementNamed(
+      context,
+      category == 'Driver' ? '/login' : '/signin',
+    );
   }
 
   @override
@@ -114,41 +130,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+              // Profile picture upload section
+              Center(
+                child: GestureDetector(
+                  onTap: _pickProfileImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: _profileImage != null
+                        ? FileImage(_profileImage!)
+                        : null,
+                    child: _profileImage == null
+                        ? const Icon(Icons.camera_alt, color: Colors.white)
+                        : null,
                   ),
-                  filled: true,
-                  fillColor: Colors.grey[200], // Updated field background color
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              _buildTextField(
+                controller: _nameController,
+                label: 'Name',
+                icon: Icons.person_outline,
+                validator: (value) => value!.isEmpty ? 'Please enter your name' : null,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
                 controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                ),
+                label: 'Email',
+                icon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
+                  if (value!.isEmpty) return 'Please enter your email';
                   if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
                     return 'Please enter a valid email';
                   }
@@ -156,50 +168,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              _buildTextField(
                 controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.visibility_off_outlined),
-                    onPressed: () {
-                      // Add functionality to toggle password visibility
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
+                label: 'Password',
+                icon: Icons.lock_outline,
+                obscureText: !_isPasswordVisible,
+                suffixIcon: IconButton(
+                  icon: Icon(_isPasswordVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? 'Please enter your password' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              _buildTextField(
                 controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200], // Updated field background color
-                ),
+                label: 'Phone Number',
+                icon: Icons.phone,
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
+                validator: (value) => value!.isEmpty ? 'Please enter your phone number' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -229,7 +221,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _signup,
+                  onPressed: _isSubmitting ? null : _signup,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
@@ -237,50 +229,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     backgroundColor: Colors.black,
                   ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Register',
+                          style: TextStyle(color: Colors.white),
+                        ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/login');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700, // Suitable color for driver button
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), // Reduced roundness
-                      ),
-                    ),
-                    child: const Text(
-                      'Log in as Driver',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/signin');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple.shade700, // Suitable color for passenger button
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), // Reduced roundness
-                      ),
-                    ),
-                    child: const Text(
-                      'Log in as Passenger',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => _continueAs('Driver'),
+                child: Text('Continue as Driver', style: TextStyle(fontSize: 16)),
+              ),
+              TextButton(
+                onPressed: () => _continueAs('Passenger'),
+                child: Text('Continue as Passenger', style: TextStyle(fontSize: 16)),
               ),
             ],
           ),
@@ -289,12 +253,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _phoneController.dispose();
-    super.dispose();
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    required String? Function(String?) validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        filled: true,
+        fillColor: Colors.grey[200],
+      ),
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+    );
   }
 }

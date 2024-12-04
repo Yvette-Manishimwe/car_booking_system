@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'booking_confirmation_screen.dart';
-import 'notifications_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -27,16 +26,22 @@ class _BookingScreenState extends State<BookingScreen> {
     _fetchLoggedInPassengerId();
   }
 
-Future<void> _fetchLoggedInPassengerId() async {
-  final storage = FlutterSecureStorage();
-  String? passengerId = await storage.read(key: 'passenger_id');
-  print('Fetched passenger ID: $passengerId'); // Debugging line
-  
-  setState(() {
-    _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
-  });
-}
-
+  Future<void> _fetchLoggedInPassengerId() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? passengerId = await storage.read(key: 'passenger_id');
+      setState(() {
+        _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
+      });
+      if (_loggedInPassengerId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
+        );
+      }
+    } catch (e) {
+      print('Error fetching passenger ID: $e');
+    }
+  }
 
   Future<void> _fetchLocations() async {
     try {
@@ -59,7 +64,6 @@ Future<void> _fetchLoggedInPassengerId() async {
   }
 
   Future<void> _fetchAvailableDrivers() async {
-    // Ensure locations are selected
     if (_selectedDepartureLocation == null || _selectedDestination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select both locations')),
@@ -68,21 +72,14 @@ Future<void> _fetchLoggedInPassengerId() async {
     }
 
     setState(() {
-      _isLoading = true; // Start loading indicator
+      _isLoading = true;
     });
-
-    final url =  Uri.parse(
-        'http://192.168.1.69:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination');
-    
-const token = 'token'; // Replace with the actual JWT token
 
     try {
       final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
+        Uri.parse(
+            'http://192.168.1.69:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -91,37 +88,41 @@ const token = 'token'; // Replace with the actual JWT token
           _availableDrivers = data['drivers'];
           _isLoading = false;
         });
-        
-        // Check if drivers are found but not matching the route
+
         if (_availableDrivers.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No drivers available for this route')),
+            const SnackBar(content: Text('No drivers available for this route')),
           );
         }
       } else {
         print('Failed to load available drivers');
         setState(() {
-          _isLoading = false; // Stop loading indicator
+          _isLoading = false;
         });
       }
     } catch (e) {
-      print('Error: $e');
+      print('Error fetching available drivers: $e');
       setState(() {
-        _isLoading = false; // Stop loading indicator
+        _isLoading = false;
       });
     }
   }
 
-  void _navigateToNotifications() {
+  void _navigateToBookingConfirmationScreen(dynamic driver) {
     if (_loggedInPassengerId != null) {
-      Navigator.pushNamed(
+      Navigator.push(
         context,
-        '/notification',
-        arguments: {'passengerId': _loggedInPassengerId},
+        MaterialPageRoute(
+          builder: (context) => BookingConfirmationScreen(
+            tripId: driver['trip_id'],
+            driverId: driver['id'],
+            passengerId: _loggedInPassengerId!,
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passenger ID not found')),
+        const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
       );
     }
   }
@@ -180,41 +181,22 @@ const token = 'token'; // Replace with the actual JWT token
 
             _isLoading
                 ? const CircularProgressIndicator()
-               
-                    
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _availableDrivers.length,
-                        itemBuilder: (context, index) {
-                          final driver = _availableDrivers[index];
-                          return ListTile(
-                            title: Text(driver['name']),
-                            subtitle: Text(
-                                'Plate: ${driver['plate_number']} - Time: ${driver['trip_time']}'),
-                            trailing: ElevatedButton(
-                              onPressed: () {
-                                if (_loggedInPassengerId != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => BookingConfirmationScreen(
-                                        tripId: driver['trip_id'],
-                                        driverId: driver['id'],
-                                        passengerId: _loggedInPassengerId!,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Passenger ID not found')),
-                                  );
-                                }
-                              },
-                              child: const Text('Book'),
-                            ),
-                          );
-                        },
-                      ),
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _availableDrivers.length,
+                    itemBuilder: (context, index) {
+                      final driver = _availableDrivers[index];
+                      return ListTile(
+                        title: Text(driver['name']),
+                        subtitle: Text(
+                            'Plate: ${driver['plate_number']} - Time: ${driver['trip_time']}'),
+                        trailing: ElevatedButton(
+                          onPressed: () => _navigateToBookingConfirmationScreen(driver),
+                          child: const Text('Book'),
+                        ),
+                      );
+                    },
+                  ),
           ],
         ),
       ),
@@ -225,8 +207,12 @@ const token = 'token'; // Replace with the actual JWT token
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.payment),
+            icon: Icon(Icons.bookmark),
             label: 'Booking',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment),
+            label: 'Payment',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
@@ -244,10 +230,13 @@ const token = 'token'; // Replace with the actual JWT token
           if (index == 0) {
             Navigator.pushNamed(context, '/passenger_home');
           } else if (index == 1) {
-            // Stay on this screen as it's BookingScreen
-          } else if (index == 2) {
-            _navigateToNotifications();
-          } else if (index == 3) {
+            // Stay on the current page
+          } else if (index == 2){
+            Navigator.pushNamed(context, '/payment');
+          }
+          else if (index == 3) {
+            Navigator.pushNamed(context, '/notification');
+          } else if (index == 4) {
             Navigator.pushNamed(context, '/profile');
           }
         },

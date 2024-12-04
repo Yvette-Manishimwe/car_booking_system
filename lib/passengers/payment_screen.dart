@@ -7,14 +7,12 @@ class PaymentScreen extends StatefulWidget {
   final int bookingId; // Booking ID passed from a previous screen
   final String driverName; // Driver name for the trip
   final String destination; // Destination for the trip
-  final double amount; // Amount for the trip
 
   const PaymentScreen({
     super.key,
     required this.bookingId,
     required this.driverName,
     required this.destination,
-    required this.amount,
   });
 
   @override
@@ -126,7 +124,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Text('Booking ID: ${widget.bookingId}'),
             Text('Driver Name: ${widget.driverName}'),
             Text('Destination: ${widget.destination}'),
-            Text('Amount: \$${widget.amount.toStringAsFixed(2)}'),
             const SizedBox(height: 20),
 
             if (ratingSubmitted) ...[ // If the rating is already submitted

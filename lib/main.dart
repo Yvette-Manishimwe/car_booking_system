@@ -7,8 +7,9 @@ import 'package:drivers_app/drivers/add_trip_screen.dart';
 import 'package:drivers_app/drivers/driver_notification_screen.dart';
 import 'package:drivers_app/drivers/earning_screen.dart';
 import 'package:drivers_app/drivers/home_screen.dart';
-import 'package:drivers_app/passengers/home_screen_two.dart';
+import 'package:drivers_app/passengers/home_payment_screen_two.dart';
 import 'package:drivers_app/passengers/booking_screen.dart';
+import 'package:drivers_app/passengers/main_home_screen.dart';
 import 'package:drivers_app/passengers/notifications_screen.dart';
 import 'package:drivers_app/passengers/payment_screen.dart';
 import 'package:drivers_app/passengers/profile_screen.dart';
@@ -43,10 +44,12 @@ class MyApp extends StatelessWidget {
         '/add-trip': (context) => const AddTripScreen(),
         '/earning': (context) => const EarningsScreen(),
         '/signin': (context) => const LoginsScreen(),
-        '/passenger_home': (context) => const PassengerHomeScreen(),
+        '/passenger_home': (context) => const MainHomeScreen(),
         '/booking': (context) => const BookingScreen(),
         '/profile': (context) => const PassengerProfileScreen(),
+        '/payment': (context) => const HomePaymentScreenTwo(),
         '/drivers_notification': (context) => const DriverNotificationScreen(),
+        
         
         '/notification': (context) {
   return const NotificationsScreen(); // No longer passing passengerId

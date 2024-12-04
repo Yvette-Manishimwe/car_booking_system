@@ -11,8 +11,11 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  String driverName = '';
-  String driverEmail = '';
+  String name = '';
+  String email = '';
+  String phone = '';
+  String category = '';
+  String profilePictureUrl = ''; // Added to store profile picture URL
   bool isLoading = true;
   int _selectedIndex = 4; // Default index for the bottom navigation bar (account at 5th index)
 
@@ -21,10 +24,10 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void initState() {
     super.initState();
-    fetchDriverDetails();
+    fetchUserDetails();
   }
 
-  Future<void> fetchDriverDetails() async {
+  Future<void> fetchUserDetails() async {
     try {
       // Retrieve the token from secure storage
       final String? token = await _storage.read(key: 'token');
@@ -44,8 +47,13 @@ class _AccountScreenState extends State<AccountScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          driverName = data['name'];
-          driverEmail = data['email'];
+          name = data['name'];
+          email = data['email'];
+          phone = data['phone'];
+          category = data['category'];
+          profilePictureUrl = data['profile_picture'] != null 
+              ? 'http://192.168.1.69:5000/${data['profile_picture']}'  // Replace with your actual IP address
+                : '';
           isLoading = false;
         });
       } else {
@@ -61,7 +69,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> logout() async {
     // Clear the token from secure storage
-    await _storage.delete(key: 'auth_token');
+    await _storage.delete(key: 'token');
     
     // Navigate to the login page
     Navigator.pushReplacementNamed(context, '/login');
@@ -107,7 +115,6 @@ class _AccountScreenState extends State<AccountScreen> {
         appBar: AppBar(
           title: const Text('Your Profile'),
           actions: [
-            
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: logout, // Logout button
@@ -131,6 +138,14 @@ class _AccountScreenState extends State<AccountScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Profile picture
+                          CircleAvatar(
+                            radius: 50.0,
+                            backgroundImage: profilePictureUrl.isNotEmpty
+                                ? NetworkImage(profilePictureUrl)
+                                : const AssetImage('assets/default_profile.png') , 
+                          ),
+                          const SizedBox(height: 20),
                           Text(
                             'Name:',
                             style: TextStyle(
@@ -141,7 +156,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            driverName,
+                            name,
                             style: const TextStyle(
                               fontSize: 26.0,
                               fontWeight: FontWeight.w500,
@@ -159,7 +174,43 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            driverEmail,
+                            email,
+                            style: const TextStyle(
+                              fontSize: 26.0,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Phone:',
+                            style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            phone,
+                            style: const TextStyle(
+                              fontSize: 26.0,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Category:',
+                            style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            category,
                             style: const TextStyle(
                               fontSize: 26.0,
                               fontWeight: FontWeight.w500,

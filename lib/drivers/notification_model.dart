@@ -30,11 +30,11 @@ class NotificationModel {
       passengerId: json['passenger_id'] as int,
       passengerName: json['passenger_name'] as String, // Map passenger's name
       passengerPhone: json['passenger_phone'] as String, // Map passenger's phone
-      departure: json['departure_location'] as String,
-      destination: json['destination'] as String,
-      message: json['message'] as String,
-      timestamp: json['created_at'] as String,
-      isRead: json['status'] == 'Confirmed',
+      departure: json['departure_location'] as String, // Map departure location
+      destination: json['destination'] as String, // Map destination
+      message: json['message'] as String, // Map message
+      timestamp: json['timestamp'] as String, // Map timestamp
+      isRead: json['status'] == 'Sent', // Map isRead based on status
     );
   }
 }

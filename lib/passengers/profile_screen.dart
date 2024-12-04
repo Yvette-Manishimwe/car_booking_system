@@ -13,8 +13,10 @@ class PassengerProfileScreen extends StatefulWidget {
 class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   String passengerName = '';
   String passengerEmail = '';
+  String passengerPhone = '';
+  String passengerCategory = '';
   bool isLoading = true;
-  int _selectedIndex = 3; // Default index for the bottom navigation bar
+  int _selectedIndex = 4; // Default index for the bottom navigation bar
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(); // Secure storage instance
 
@@ -46,6 +48,8 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
         setState(() {
           passengerName = data['name'] ?? 'No Name Available';
           passengerEmail = data['email'] ?? 'No Email Available';
+          passengerPhone = data['phone'] ?? 'No Phone Available';
+          passengerCategory = data['category'] ?? 'No Category Available';
           isLoading = false;
         });
       } else {
@@ -84,9 +88,12 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
         Navigator.pushReplacementNamed(context, '/booking');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/notification');
+        Navigator.pushReplacementNamed(context, '/payment');
         break;
       case 3:
+        Navigator.pushReplacementNamed(context, '/notification');
+        break;
+      case 4:
         Navigator.pushReplacementNamed(context, '/profile');
         break;
       default:
@@ -160,6 +167,24 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                             passengerEmail,
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Phone:',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(
+                            passengerPhone,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Category:',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(
+                            passengerCategory,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
                         ],
                       ),
                     ),
@@ -174,8 +199,12 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book),
+            icon: Icon(Icons.bookmark),
             label: 'Booking',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment),
+            label: 'Payment',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),

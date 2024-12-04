@@ -11,9 +11,10 @@ class EarningsScreen extends StatefulWidget {
 }
 
 class _EarningsScreenState extends State<EarningsScreen> {
-  double totalEarnings = 0.0;
+
   double averageRating = 0.0;
   bool isLoading = true;
+  String reminderMessage = ''; // Variable to hold the reminder message
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(); // Secure storage instance
   int _selectedIndex = 2; // Set initial index to 2 (Earnings)
@@ -47,8 +48,9 @@ class _EarningsScreenState extends State<EarningsScreen> {
         // Parse the response body
         final data = json.decode(response.body);
         setState(() {
-          totalEarnings = double.tryParse(data['totalEarnings'].toString()) ?? 0.0;
+          
           averageRating = double.tryParse(data['averageRating'].toString()) ?? 0.0;
+          reminderMessage = data['reminderMessage'] ?? ''; // Retrieve the reminder message
           isLoading = false;
         });
       } else {
@@ -110,9 +112,10 @@ class _EarningsScreenState extends State<EarningsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildEarningsCard('Total Earnings:', '\$${totalEarnings.toStringAsFixed(2)}'),
-                    const SizedBox(height: 20),
+                  
                     _buildEarningsCard('Average Rating:', '${averageRating.toStringAsFixed(1)} stars'),
+                    const SizedBox(height: 20),
+                    _buildReminderCard(reminderMessage), // Display the reminder message
                   ],
                 ),
               ),
@@ -177,6 +180,36 @@ class _EarningsScreenState extends State<EarningsScreen> {
                     fontSize: 34,
                   ) ??
                   const TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderCard(String message) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reminder:',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ) ??
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),

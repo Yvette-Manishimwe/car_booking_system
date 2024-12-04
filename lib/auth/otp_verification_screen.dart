@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:convert' as convert;
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
 
-  const OtpVerificationScreen({Key? key, required this.email}) : super(key: key);
+  const OtpVerificationScreen({required this.email, Key? key}) : super(key: key);
 
   @override
   _OtpVerificationScreenState createState() => _OtpVerificationScreenState();
@@ -13,154 +16,137 @@ class OtpVerificationScreen extends StatefulWidget {
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final TextEditingController _otpController = TextEditingController();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
   bool _isVerifying = false;
-  String? _errorMessage;
 
   Future<void> _verifyOtp() async {
-    if (_otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the OTP.')),
-      );
-      return;
-    }
-
     setState(() {
       _isVerifying = true;
     });
 
+    final Map<String, dynamic> otpData = {
+      'email': widget.email,
+      'otp': _otpController.text,
+    };
+
     try {
-      // Send OTP verification request to the backend
       final response = await http.post(
-        Uri.parse('http://192.168.1.69:5000/verify-2fa'),
+        Uri.parse('http://192.168.1.69:5000/verify-otp'), // Adjust the URL if needed
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': widget.email,
-          'code': _otpController.text,
-        }),
+        body: json.encode(otpData),
       );
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        final String message = responseData['message'];
-        final String? token = responseData['token'];
-
-        if (token != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-          // Navigate to the home screen
-          Navigator.of(context).pushReplacementNamed('/driver_home');
-        } else {
-          setState(() {
-            _errorMessage = 'Unexpected response from the server.';
-          });
-        }
-      } else {
-        final responseData = json.decode(response.body);
-        setState(() {
-          _errorMessage = responseData['message'] ?? 'Failed to verify OTP.';
-        });
-      }
-    } catch (error) {
-      setState(() {
-        _errorMessage = 'An error occurred: $error';
-      });
-    } finally {
       setState(() {
         _isVerifying = false;
       });
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final String? token = responseData['token'];
+        final dynamic passengerId = responseData['passenger_id'];  // passenger_id can be dynamic (int or String)
+
+        if (token != null) {
+          await _storage.write(key: 'token', value: token);
+
+          // Convert passenger_id to String before storing
+          if (passengerId != null) {
+            await _storage.write(
+              key: 'passenger_id',
+              value: passengerId.toString(),  // Convert int to String
+            );
+          }
+
+          // Decode the JWT token to get the payload
+          final payload = token.split('.')[1];
+
+          // Ensure the payload length is a multiple of 4
+          final String normalizedPayload = _normalizeBase64Url(payload);
+
+          // Decode the payload
+          final decodedPayload = convert.utf8.decode(base64Url.decode(normalizedPayload));
+          final Map<String, dynamic> decodedData = json.decode(decodedPayload);
+
+          // Extract the role (category) from the decoded payload
+          final String role = decodedData['category']; // Ensure the key 'category' exists in the token payload
+
+          // Redirect based on role (driver or passenger)
+          if (role == 'Driver') {
+            Navigator.of(context).pushReplacementNamed('/');
+          } else if (role == 'Passenger') {
+            Navigator.of(context).pushReplacementNamed('/passenger_home');
+          } else {
+            Fluttertoast.showToast(
+              msg: 'Invalid role in token.',
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.BOTTOM,
+            );
+          }
+        } else {
+          Fluttertoast.showToast(
+            msg: 'Failed to receive token.',
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: 'OTP verification failed: ${response.statusCode}',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    } catch (error) {
+      setState(() {
+        _isVerifying = false;
+      });
+      Fluttertoast.showToast(
+        msg: 'An error occurred: $error',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
     }
+  }
+
+  // Function to add the correct padding to a base64 URL encoded string
+  String _normalizeBase64Url(String base64Url) {
+    // Add padding to make the length a multiple of 4
+    int paddingLength = 4 - (base64Url.length % 4);
+    if (paddingLength != 4) {
+      base64Url += '=' * paddingLength;
+    }
+    return base64Url;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('OTP Verification'),
-        backgroundColor: Colors.grey[850],
-      ),
+      appBar: AppBar(title: const Text('Verify OTP')),
       body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Enter OTP',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'An OTP has been sent to ${widget.email}. Please enter it below.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _otpController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'OTP',
-                          prefixIcon: const Icon(Icons.verified),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (_errorMessage != null)
-                        Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      const SizedBox(height: 16),
-                      _isVerifying
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              onPressed: _verifyOtp,
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                                backgroundColor: Colors.grey[850],
-                              ),
-                              child: const Text(
-                                'Verify OTP',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                    ],
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _otpController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Enter OTP',
+                  border: OutlineInputBorder(),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              _isVerifying
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _verifyOtp,
+                      child: const Text('Verify OTP'),
+                    ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _otpController.dispose();
-    super.dispose();
   }
 }
