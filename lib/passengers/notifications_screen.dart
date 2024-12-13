@@ -30,7 +30,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/get_notifications'), // Updated URL
+        Uri.parse('http://192.168.8.104:5000/get_notifications'), // Updated URL
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -80,46 +80,54 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : notifications.isEmpty
-              ? const Center(child: Text('No notifications available'))
-              : ListView.builder(
-                  itemCount: notifications.length,
-                  itemBuilder: (context, index) {
-                    final notification = notifications[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      elevation: 4,
-                      child: ListTile(
-                        title: Text(notification['message'] ?? 'No message'), // Safeguard against null
-                        subtitle: Text(notification['timestamp'] ?? 'No timestamp'), // Safeguard against null
-                        trailing: Icon(
-                          notification['status'] == 'Confirmed'
-                              ? Icons.check
-                              : Icons.new_releases,
-                          color: notification['status'] == 'Confirmed' ? Colors.green : Colors.red,
+    return WillPopScope(
+      onWillPop: () async {
+        // Navigate to /passenger_home when the back button is pressed
+        Navigator.pushReplacementNamed(context, '/passenger_home');
+        return false; // Prevent default back button behavior
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Notifications'),
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : notifications.isEmpty
+                ? const Center(child: Text('No notifications available'))
+                : ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        elevation: 4,
+                        child: ListTile(
+                          title: Text(notification['message'] ?? 'No message'), // Safeguard against null
+                          subtitle: Text(notification['timestamp'] ?? 'No timestamp'), // Safeguard against null
+                          trailing: Icon(
+                            notification['status'] == 'Confirmed'
+                                ? Icons.check
+                                : Icons.new_releases,
+                            color: notification['status'] == 'Confirmed' ? Colors.green : Colors.red,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Booking'),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped, // Call the navigation logic
+                      );
+                    },
+                  ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Booking'),
+            BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
+            BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+            BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
+          ],
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+          onTap: _onItemTapped, // Call the navigation logic
+        ),
       ),
     );
   }

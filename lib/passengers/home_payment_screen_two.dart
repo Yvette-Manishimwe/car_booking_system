@@ -51,7 +51,7 @@ class _HomePaymentScreenTwoState extends State<HomePaymentScreenTwo> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/bookings'),
+        Uri.parse('http://192.168.8.104:5000/bookings'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -106,7 +106,7 @@ class _HomePaymentScreenTwoState extends State<HomePaymentScreenTwo> {
   void _onItemTapped(int index) {
     switch (index) {
       case 0: // Home
-         Navigator.pushReplacementNamed(context, '/');
+         Navigator.pushReplacementNamed(context, '/passenger_home');
         break;
       case 1: // Booking
         Navigator.pushReplacementNamed(context, '/booking');
@@ -187,6 +187,7 @@ class _HomePaymentScreenTwoState extends State<HomePaymentScreenTwo> {
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,

@@ -26,7 +26,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final String token = await storage.read(key: 'token') ?? '';
 
     final response = await http.get(
-      Uri.parse('http://192.168.1.69:5000/trip-details/$tripId'),
+      Uri.parse('http://192.168.8.104:5000/trip-details/$tripId'),
       headers: {
         'Authorization': 'Bearer $token',
       },

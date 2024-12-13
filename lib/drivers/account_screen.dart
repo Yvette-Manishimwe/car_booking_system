@@ -37,7 +37,7 @@ class _AccountScreenState extends State<AccountScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/driver-details'),
+        Uri.parse('http://192.168.8.104:5000/driver-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ class _AccountScreenState extends State<AccountScreen> {
           phone = data['phone'];
           category = data['category'];
           profilePictureUrl = data['profile_picture'] != null 
-              ? 'http://192.168.1.69:5000/${data['profile_picture']}'  // Replace with your actual IP address
+              ? 'http://192.168.8.104:5000${data['profile_picture']}'  // Replace with your actual IP address
                 : '';
           isLoading = false;
         });

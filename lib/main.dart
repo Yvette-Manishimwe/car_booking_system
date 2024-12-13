@@ -13,6 +13,7 @@ import 'package:drivers_app/passengers/main_home_screen.dart';
 import 'package:drivers_app/passengers/notifications_screen.dart';
 import 'package:drivers_app/passengers/payment_screen.dart';
 import 'package:drivers_app/passengers/profile_screen.dart';
+import 'package:drivers_app/passengers/upload_proof_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/booking': (context) => const BookingScreen(),
         '/profile': (context) => const PassengerProfileScreen(),
         '/payment': (context) => const HomePaymentScreenTwo(),
+       
         '/drivers_notification': (context) => const DriverNotificationScreen(),
         
         

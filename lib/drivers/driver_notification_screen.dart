@@ -8,13 +8,15 @@ class DriverNotificationScreen extends StatefulWidget {
   const DriverNotificationScreen({super.key});
 
   @override
-  _DriverNotificationScreenState createState() => _DriverNotificationScreenState();
+  _DriverNotificationScreenState createState() =>
+      _DriverNotificationScreenState();
 }
 
 class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
   List<NotificationModel> notifications = [];
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isLoading = true;
+  int _selectedIndex = 3; // Index for "Notifications" tab
 
   @override
   void initState() {
@@ -26,7 +28,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/driver-notifications'),
+        Uri.parse('http://192.168.8.104:5000/driver-notifications'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -36,7 +38,8 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-          notifications = data.map((json) => NotificationModel.fromJson(json)).toList();
+          notifications =
+              data.map((json) => NotificationModel.fromJson(json)).toList();
           isLoading = false;
         });
       } else {
@@ -50,11 +53,12 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     }
   }
 
-  Future<void> sendMessage(int notificationId, int tripId, String message) async {
+  Future<void> sendMessage(
+      int notificationId, int tripId, String message) async {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.post(
-        Uri.parse('http://192.168.1.69:5000/send-message'),
+        Uri.parse('http://192.168.8.104:5000/send-message'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -109,7 +113,8 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
                 if (messageController.text.isNotEmpty) {
-                  sendMessage(notification.id, notification.tripId, messageController.text);
+                  sendMessage(notification.id, notification.tripId,
+                      messageController.text);
                 }
               },
               child: const Text('Send'),
@@ -126,32 +131,94 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     );
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/'); // Home route
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/add-trip');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/earning');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/drivers_notification');
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, '/account');
+        break;
+      default:
+        throw Exception('Invalid index');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Driver Notifications'),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Driver Notifications'),
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : notifications.isEmpty
+                ? const Center(child: Text('No notifications found'))
+                : ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return ListTile(
+                        title: Text(notification.message),
+                        subtitle: Text(notification.timestamp),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.message),
+                          onPressed: () {
+                            _showSendMessageDialog(notification);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+          showUnselectedLabels: true,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle),
+              label: 'Add Trip',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.monetization_on),
+              label: 'Earnings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle),
+              label: 'Account',
+            ),
+          ],
+        ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : notifications.isEmpty
-              ? const Center(child: Text('No notifications found'))
-              : ListView.builder(
-                  itemCount: notifications.length,
-                  itemBuilder: (context, index) {
-                    final notification = notifications[index];
-                    return ListTile(
-                      title: Text(notification.message),
-                      subtitle: Text(notification.timestamp),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.message),
-                        onPressed: () {
-                          _showSendMessageDialog(notification);
-                        },
-                      ),
-                    );
-                  },
-                ),
     );
   }
 }

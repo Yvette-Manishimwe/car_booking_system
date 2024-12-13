@@ -18,6 +18,7 @@ class _BookingScreenState extends State<BookingScreen> {
   List<dynamic> _availableDrivers = [];
   bool _isLoading = false;
   int? _loggedInPassengerId;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _fetchLocations() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/locations'),
+        Uri.parse('http://192.168.8.104:5000/locations'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -78,7 +79,7 @@ class _BookingScreenState extends State<BookingScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.1.69:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
+            'http://192.168.8.104:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -105,6 +106,33 @@ class _BookingScreenState extends State<BookingScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+    // Handle navigation when a BottomNavigationBar item is tapped
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index; // Update the selected index
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/passenger_home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/booking');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/payment');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/notification');
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+      default:
+        throw Exception('Invalid index');
     }
   }
 
@@ -187,6 +215,12 @@ class _BookingScreenState extends State<BookingScreen> {
                     itemBuilder: (context, index) {
                       final driver = _availableDrivers[index];
                       return ListTile(
+                        leading: CircleAvatar(
+                          radius: 35.0, // Increased radius for a bigger image
+                          backgroundImage: NetworkImage(
+                           'http://192.168.8.104:5000${driver['profile_picture']}' ?? 'assets/default_profile_picture.jpg',
+                          ),
+                        ),
                         title: Text(driver['name']),
                         subtitle: Text(
                             'Plate: ${driver['plate_number']} - Time: ${driver['trip_time']}'),
@@ -223,23 +257,11 @@ class _BookingScreenState extends State<BookingScreen> {
             label: 'Account',
           ),
         ],
+        type: BottomNavigationBarType.fixed,
         currentIndex: 1,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamed(context, '/passenger_home');
-          } else if (index == 1) {
-            // Stay on the current page
-          } else if (index == 2){
-            Navigator.pushNamed(context, '/payment');
-          }
-          else if (index == 3) {
-            Navigator.pushNamed(context, '/notification');
-          } else if (index == 4) {
-            Navigator.pushNamed(context, '/profile');
-          }
-        },
+        onTap: _onItemTapped,
       ),
     );
   }

@@ -1,69 +1,103 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // For secure storage
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class EarningsScreen extends StatefulWidget {
-  const EarningsScreen({super.key});
+  const EarningsScreen({Key? key}) : super(key: key);
 
   @override
   _EarningsScreenState createState() => _EarningsScreenState();
 }
 
 class _EarningsScreenState extends State<EarningsScreen> {
-
   double averageRating = 0.0;
+  int totalRatings = 0;
+  String reminderMessage = '';
   bool isLoading = true;
-  String reminderMessage = ''; // Variable to hold the reminder message
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(); // Secure storage instance
-  int _selectedIndex = 2; // Set initial index to 2 (Earnings)
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  int _selectedIndex = 2; // Default index for Earnings screen
 
   @override
   void initState() {
     super.initState();
     fetchEarnings();
+    fetchReminders();
   }
 
   Future<void> fetchEarnings() async {
     try {
-      // Retrieve the token from secure storage
       final String? token = await _storage.read(key: 'token');
+      if (token == null) throw Exception('No auth token found');
 
-      if (token == null) {
-        throw Exception('No auth token found');
-      }
-
-      // Perform the HTTP GET request to fetch earnings data
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/earnings'),
+        Uri.parse('http://192.168.8.104:5000/earnings'),
         headers: {
-          'Authorization': 'Bearer $token', // Use the token from secure storage
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       );
 
-      // Ensure the status code is 200 (OK) before proceeding
       if (response.statusCode == 200) {
-        // Parse the response body
         final data = json.decode(response.body);
+
+        double parsedRating = (data['averageRating'] is int)
+            ? (data['averageRating'] as int).toDouble()
+            : (data['averageRating'] ?? 0.0);
+
         setState(() {
-          
-          averageRating = double.tryParse(data['averageRating'].toString()) ?? 0.0;
-          reminderMessage = data['reminderMessage'] ?? ''; // Retrieve the reminder message
-          isLoading = false;
+          averageRating = parsedRating;
+          totalRatings = data['totalRatings'] ?? 0;
         });
       } else {
-        // Handle non-200 responses
         throw Exception('Failed to load earnings');
       }
     } catch (e) {
-      // Handle any errors that occur during the fetch
-      print('Error fetching earnings: $e');
+      print('Error: $e');
+    }
+  }
+
+  Future<void> fetchReminders() async {
+    try {
+      final String? token = await _storage.read(key: 'token');
+      if (token == null) throw Exception('No auth token found');
+
+      final response = await http.get(
+        Uri.parse('http://192.168.8.104:5000/earnings-reminders'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['reminders'].isNotEmpty) {
+          setState(() {
+            reminderMessage = data['reminders'][0]['message'] ?? '';
+          });
+        } else {
+          setState(() {
+            reminderMessage = 'Remember that after 1 week with a low rating, you will be paused.';
+          });
+        }
+      } else {
+        throw Exception('Failed to load reminders');
+      }
+    } catch (e) {
+      print('Error: $e');
+    } finally {
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  Future<bool> _onWillPop() async {
+    Navigator.pushReplacementNamed(context, '/');
+    return false;
   }
 
   void _onItemTapped(int index) {
@@ -71,40 +105,33 @@ class _EarningsScreenState extends State<EarningsScreen> {
       _selectedIndex = index;
     });
 
-    // Navigate to the selected screen based on the index
     switch (index) {
       case 0:
-        Navigator.of(context).pushReplacementNamed('/'); // Replace with your home screen route
+        Navigator.pushReplacementNamed(context, '/');
         break;
       case 1:
-        Navigator.of(context).pushReplacementNamed('/add-trip'); // Replace with your add trip screen route
+        Navigator.pushReplacementNamed(context, '/add-trip');
         break;
       case 2:
-        Navigator.of(context).pushReplacementNamed('/earning'); // Replace with your earnings screen route
+        Navigator.pushReplacementNamed(context, '/earning');
         break;
       case 3:
-        Navigator.of(context).pushReplacementNamed('/drivers_notification'); // Replace with your notifications screen route
+        Navigator.pushReplacementNamed(context, '/drivers_notification');
         break;
       case 4:
-        Navigator.of(context).pushReplacementNamed('/account'); // Replace with your account screen route
+        Navigator.pushReplacementNamed(context, '/account');
         break;
+      default:
+        throw Exception('Invalid index');
     }
-  }
-
-  Future<bool> _onWillPop() async {
-    // Navigate to the home page
-    Navigator.pushReplacementNamed(context, '/');
-    return false; // Prevent default back button behavior
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop, // Handle back button press
+      onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Earnings of the Day'),
-        ),
+        appBar: AppBar(title: const Text('Earnings')),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
             : Padding(
@@ -112,20 +139,21 @@ class _EarningsScreenState extends State<EarningsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  
-                    _buildEarningsCard('Average Rating:', '${averageRating.toStringAsFixed(1)} stars'),
+                    _buildEarningsCard('Average Rating', '${averageRating.toStringAsFixed(1)} ★'),
                     const SizedBox(height: 20),
-                    _buildReminderCard(reminderMessage), // Display the reminder message
+                    _buildEarningsCard('Total Ratings', '$totalRatings'),
+                    const SizedBox(height: 20),
+                    _buildReminderCard(reminderMessage),
                   ],
                 ),
               ),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex, // Set the current selected index
-          onTap: _onItemTapped, // Handle navigation on item tap
-          selectedItemColor: Colors.blue, // Color when an item is selected
-          unselectedItemColor: Colors.grey, // Color for unselected items
-          showUnselectedLabels: true, // Show labels for unselected items
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+          showUnselectedLabels: true,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -153,34 +181,18 @@ class _EarningsScreenState extends State<EarningsScreen> {
     );
   }
 
-  Widget _buildEarningsCard(String title, String amount) {
+  Widget _buildEarningsCard(String title, String value) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ) ??
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             const SizedBox(height: 8),
-            Text(
-              amount,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 34,
-                  ) ??
-                  const TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
-            ),
+            Text(value, style: const TextStyle(fontSize: 28)),
           ],
         ),
       ),
@@ -190,28 +202,12 @@ class _EarningsScreenState extends State<EarningsScreen> {
   Widget _buildReminderCard(String message) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reminder:',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ) ??
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+        child: Text(
+          message,
+          style: const TextStyle(fontSize: 16),
         ),
       ),
     );

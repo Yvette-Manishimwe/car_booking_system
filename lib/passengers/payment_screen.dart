@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'upload_proof_screen.dart'; // Import the UploadProofScreen if needed
 
 class PaymentScreen extends StatefulWidget {
   final int bookingId; // Booking ID passed from a previous screen
@@ -22,8 +23,16 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isTripOver = false;
-  bool ratingSubmitted = false; // Track if the rating has been submitted
+  bool ratingSubmitted = false;
   double? _rating;
+
+  final List<Map<String, dynamic>> _locationsAndAmounts = [
+    {'location': 'Rwaza-Ryabazira', 'amount': 5000},
+    {'location': 'Kukaziba-Mukungwa', 'amount': 2500},
+    {'location': 'Rwaza-Kukaziba', 'amount': 4000},
+    {'location': 'Muhazi-Mukungwa', 'amount': 1500},
+    {'location': 'Kukaziba-Ryabazira', 'amount': 1000},
+  ];
 
   @override
   void initState() {
@@ -31,77 +40,67 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _checkRatingSubmission();
   }
 
-  // Check if the rating has already been submitted based on booking_id
   Future<void> _checkRatingSubmission() async {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('http://192.168.1.69:5000/check_rating?booking_id=${widget.bookingId}'),
+      Uri.parse('http://192.168.8.104:5000/check_rating?booking_id=${widget.bookingId}'),
       headers: {
-        'Authorization': 'Bearer $token', // Include the token in the headers
+        'Authorization': 'Bearer $token',
       },
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
-        ratingSubmitted = data['ratingSubmitted'] ?? false; // Check API response
+        ratingSubmitted = data['ratingSubmitted'] ?? false;
       });
     } else {
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to check rating status: ${response.body}')),
       );
     }
   }
 
-  // Handle rating submission based on booking_id
-  Future<void> _submitRating(double rating) async {
-    String? token = await _storage.read(key: 'token');
 
-    final response = await http.post(
-      Uri.parse('http://192.168.1.69:5000/rate_driver'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Include the token in the headers
-      },
-      body: jsonEncode({
-        'booking_id': widget.bookingId, // Use booking_id for rating
-        'rating': rating,
-      }),
-    );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        ratingSubmitted = true; // Set the rating as submitted
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Rating submitted successfully!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit rating: ${response.body}')),
-      );
-    }
-  }
-
-  // Method to build the star rating row
-  Widget buildStarRating() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (index) {
-        return IconButton(
-          icon: Icon(
-            index < (_rating ?? 0) ? Icons.star : Icons.star_border,
-            color: Colors.amber,
-          ),
-          onPressed: () {
-            setState(() {
-              _rating = index + 1.0; // Set rating based on the star clicked
-            });
-          },
-        );
-      }),
+  Widget buildLocationAmountTable() {
+    return Table(
+      border: TableBorder.all(),
+      children: [
+        TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Location',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Amount',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        ..._locationsAndAmounts.map((data) {
+          return TableRow(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(data['location']),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('${data['amount']} FRW'),
+              ),
+            ],
+          );
+        }).toList(),
+      ],
     );
   }
 
@@ -126,38 +125,47 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Text('Destination: ${widget.destination}'),
             const SizedBox(height: 20),
 
-            if (ratingSubmitted) ...[ // If the rating is already submitted
+            if (ratingSubmitted) ...[
               const Text(
-                'You have already paid for this trip. Please go back to the home screen.',
+                'You have already completed payment for this trip.',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
               ),
-              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/passenger_home'); // Navigate to the home screen
+                  Navigator.pushNamed(context, '/passenger_home');
                 },
                 child: const Text('Go to Home'),
               ),
-            ] else ...[ // If the rating is not submitted yet
+            ] else ...[
               const Text(
-                'Please pay using the code: *182*4#',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+                'Please pay using code: 182*8*1*563031# \n Names: Asifiwe',
+                style: TextStyle(fontSize: 18, color: Colors.green),
               ),
               const SizedBox(height: 20),
               const Text(
-                'Rate the driver:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                'Available Locations and Amounts:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              buildStarRating(), // Display star rating here
-              const SizedBox(height: 10),
+              buildLocationAmountTable(),
+              const SizedBox(height: 20),
+ 
+
               ElevatedButton(
-                onPressed: _rating == null
-                    ? null
-                    : () {
-                        _submitRating(_rating!);
-                      },
-                child: const Text('Submit Rating'),
+                onPressed: () {
+                  // Directly navigate to UploadProofScreen and pass required parameters
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UploadProofScreen(
+                        bookingId: widget.bookingId,
+                        driverName: widget.driverName,
+                        destination: widget.destination,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Continue to Upload Payment Proof'),
               ),
             ],
           ],

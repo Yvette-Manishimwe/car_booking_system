@@ -1,4 +1,5 @@
 import 'package:drivers_app/auth/otp_verification_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -32,7 +33,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://192.168.1.69:5000/login'),
+          Uri.parse('http://192.168.8.104:5000/login'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(loginData),
         );
@@ -49,7 +50,8 @@ class _SignInScreenState extends State<SignInScreen> {
           // Navigate to OTP verification screen
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => OtpVerificationScreen(email: _emailController.text),
+              builder: (_) =>
+                  OtpVerificationScreen(email: _emailController.text),
             ),
           );
         } else {
@@ -122,6 +124,27 @@ class _SignInScreenState extends State<SignInScreen> {
                           onPressed: _signin,
                           child: const Text('Login'),
                         ),
+                  const SizedBox(height: 16),
+                  RichText(
+                    text: TextSpan(
+                      text: "If you don't have an account, ",
+                      style: const TextStyle(color: Colors.black),
+                      children: [
+                        TextSpan(
+                          text: 'Sign up',
+                          style: const TextStyle(
+                            color: Colors.blue, // Highlight the link
+                            fontWeight: FontWeight.bold,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              // Navigate to the /register page
+                              Navigator.of(context).pushNamed('/register');
+                            },
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

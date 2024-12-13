@@ -15,6 +15,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   String passengerEmail = '';
   String passengerPhone = '';
   String passengerCategory = '';
+  String passengerProfilePictureUrl = ''; // To hold profile picture URL
   bool isLoading = true;
   int _selectedIndex = 4; // Default index for the bottom navigation bar
 
@@ -36,7 +37,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/passenger-details'),
+        Uri.parse('http://192.168.8.104:5000/passenger-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
@@ -50,6 +51,9 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
           passengerEmail = data['email'] ?? 'No Email Available';
           passengerPhone = data['phone'] ?? 'No Phone Available';
           passengerCategory = data['category'] ?? 'No Category Available';
+          passengerProfilePictureUrl = data['profile_picture'] != null 
+              ? 'http://192.168.8.104:5000/${data['profile_picture']}'  // Replace with your actual IP address
+              : ''; // Make sure to set it as empty if no profile picture URL is found
           isLoading = false;
         });
       } else {
@@ -142,48 +146,78 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
+                  // Profile card with profile picture and details
                   Card(
                     elevation: 4,
                     margin: const EdgeInsets.only(bottom: 20),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Name:',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            passengerName,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Email:',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            passengerEmail,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Phone:',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            passengerPhone,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Category:',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            passengerCategory,
-                            style: Theme.of(context).textTheme.headlineSmall,
+                          // Profile picture inside the card
+                          if (passengerProfilePictureUrl.isNotEmpty)
+                            CircleAvatar(
+                              radius: 50.0,
+                              backgroundImage: passengerProfilePictureUrl.isNotEmpty
+                                ? NetworkImage(passengerProfilePictureUrl)
+                                : const AssetImage('assets/default_profile.png') as ImageProvider,
+                            ),
+                          const SizedBox(height: 16),
+                          // Profile information
+                          Column(
+                            children: [
+                              Center(
+                                child: Text(
+                                  'Name:',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  passengerName,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: Text(
+                                  'Email:',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  passengerEmail,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: Text(
+                                  'Phone:',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  passengerPhone,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: Text(
+                                  'Category:',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  passengerCategory,
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -215,6 +249,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
             label: 'Profile',
           ),
         ],
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey, // Keep unselected tabs visible

@@ -53,7 +53,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.69:5000/available-trips'),
+        Uri.parse('http://192.168.8.104:5000/available-trips'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
@@ -185,6 +185,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             label: 'Account',
           ),
         ],
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,

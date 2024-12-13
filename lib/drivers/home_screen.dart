@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:drivers_app/drivers/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // For storing and retrieving the token
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,10 +16,25 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> trips = [];
   bool isLoading = true;
 
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage(); // Secure storage instance
+
   // Fetch the list of trips from the server
   Future<void> fetchTrips() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.69:5000/trips'));
+      // Retrieve the token from secure storage
+      String? token = await _secureStorage.read(key: 'token');
+
+      if (token == null) {
+        // Handle error if no token is found (e.g., user is not logged in)
+        throw Exception('No token found. Please log in.');
+      }
+
+      final response = await http.get(
+        Uri.parse('http://192.168.8.104:5000/trips'),
+        headers: {
+          'Authorization': 'Bearer $token', // Include the token in the request header
+        },
+      );
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);

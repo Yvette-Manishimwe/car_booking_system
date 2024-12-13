@@ -34,7 +34,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Future<void> _fetchAvailableSeats() async {
-    final url = Uri.parse('http://192.168.1.69:5000/get_trip_details/${widget.tripId}'); // Replace with your endpoint
+    final url = Uri.parse('http://192.168.8.104:5000/get_trip_details/${widget.tripId}'); // Replace with your endpoint
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -51,7 +51,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Future<void> _confirmBooking() async {
-    final url = Uri.parse('http://192.168.1.69:5000/book_trip');
+    final url = Uri.parse('http://192.168.8.104:5000/book_trip');
 
     // Retrieve the JWT token from secure storage
     String? token = await _secureStorage.read(key: 'token');

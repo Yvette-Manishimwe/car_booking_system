@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:drivers_app/auth/signup_screen.dart';
 import 'package:drivers_app/drivers/home_screen.dart';
 import 'package:flutter/material.dart';
-import '../mainScreens/home_screen.dart';
+
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

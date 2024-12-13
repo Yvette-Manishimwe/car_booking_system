@@ -18,7 +18,6 @@ class TripCard extends StatelessWidget {
             Text('Departure: ${trip['departure_location']}'),
             Text('Date: ${trip['trip_time']}'),
             Text('Available Seats: ${trip['available_seats']}'),
-            Text('Price: \$${trip['amount']}'),
           ],
         ),
         trailing: IconButton(

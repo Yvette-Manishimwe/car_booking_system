@@ -27,6 +27,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
   bool _isLoadingLocations = true;
   String? _plateNumberError;
 
+  int _selectedIndex = 1; // Initial index for Add Trip
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +37,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
   Future<void> _fetchLocations() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.69:5000/locations'));
+      final response = await http.get(Uri.parse('http://192.168.8.104:5000/locations'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -62,9 +64,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
     super.dispose();
   }
 
-  // Plate number validation
   String? _validatePlateNumber(String value) {
-    // Regex pattern for plate number validation: R + 2 uppercase letters + 3 digits + 1 uppercase letter
     final plateNumberPattern = RegExp(r'^R[A-Z]{2}[0-9]{3}[A-Z]{1}$');
     if (!plateNumberPattern.hasMatch(value)) {
       setState(() {
@@ -102,11 +102,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
           'departure_location': _selectedDeparture,
           'trip_time': _tripTimeController.text,
           'available_seats': int.parse(_availableSeatsController.text),
-         
         };
 
         final response = await http.post(
-          Uri.parse('http://192.168.1.69:5000/add_trip'),
+          Uri.parse('http://192.168.8.104:5000/add_trip'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -125,7 +124,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
           _formKey.currentState!.reset();
           _selectedDeparture = null;
           _selectedDestination = null;
-        } else if (response.statusCode == 400) { // Corrected syntax for `else if`
+        } else if (response.statusCode == 400) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Invalid format of plate number')),
           );
@@ -176,12 +175,16 @@ class _AddTripScreenState extends State<AddTripScreen> {
   }
 
   void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
     switch (index) {
       case 0:
-        Navigator.popUntil(context, ModalRoute.withName('/'));
+         Navigator.pushReplacementNamed(context, '/');
         break;
       case 1:
-        // Stay on Add Trip page
+         Navigator.pushReplacementNamed(context, '/add-trip');
         break;
       case 2:
         Navigator.pushNamed(context, '/earning');
@@ -203,12 +206,12 @@ class _AddTripScreenState extends State<AddTripScreen> {
         return false;
       },
       child: Scaffold(
-        appBar:  AppBar(
-          title: Text('Add Trip'),
+        appBar: AppBar(
+          title: const Text('Add Trip'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView( // Allow scrolling
+          child: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
@@ -218,8 +221,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     controller: _plateNumberController,
                     decoration: InputDecoration(
                       labelText: 'Plate Number',
-                      helperText: 'Format: RXX123Y', // Helper text showing the required format
-                      errorText: _plateNumberError, // Show error if validation fails
+                      helperText: 'Format: RXX123Y',
+                      errorText: _plateNumberError,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -291,7 +294,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
                       return null;
                     },
                   ),
-                
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _isSubmitting ? null : _submitTrip,
@@ -303,6 +305,35 @@ class _AddTripScreenState extends State<AddTripScreen> {
               ),
             ),
           ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle),
+              label: 'Add Trip',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.monetization_on),
+              label: 'Earnings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle),
+              label: 'Account',
+            ),
+          ],
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          unselectedItemColor: Colors.grey,
+          selectedItemColor: Colors.blue,
+          onTap: _onItemTapped,
         ),
       ),
     );
