@@ -37,7 +37,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
   Future<void> _fetchLocations() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.8.104:5000/locations'));
+      final response = await http.get(Uri.parse('http://192.168.149.59:5000/locations'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -105,7 +105,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         };
 
         final response = await http.post(
-          Uri.parse('http://192.168.8.104:5000/add_trip'),
+          Uri.parse('http://192.168.149.59:5000/add_trip'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',

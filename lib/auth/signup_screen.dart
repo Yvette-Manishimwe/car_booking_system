@@ -23,7 +23,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _selectedCategory = 'Passenger';
   File? _profileImage;
 
-  final String baseUrl = 'http://192.168.8.104:5000'; // Base URL for backend
+  final String baseUrl = 'http://192.168.149.59:5000'; // Base URL for backend
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
@@ -162,7 +162,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 validator: (value) {
                   if (value!.isEmpty) return 'Please enter your email';
                   if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                    return 'Please enter a valid email';
+                    return 'Invalid email format';
                   }
                   return null;
                 },
@@ -183,7 +183,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     });
                   },
                 ),
-                validator: (value) => value!.isEmpty ? 'Please enter your password' : null,
+                validator: (value) {
+                  if (value!.isEmpty) return 'Please enter your password';
+                  if (!RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&])[A-Za-z\d@#$!%*?&]{8,}$')
+                      .hasMatch(value)) {
+                    return 'Password must be at least 8 characters long, include one uppercase letter, one number, and one special character.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildTextField(
@@ -191,7 +198,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 label: 'Phone Number',
                 icon: Icons.phone,
                 keyboardType: TextInputType.phone,
-                validator: (value) => value!.isEmpty ? 'Please enter your phone number' : null,
+                validator: (value) {
+                  if (value!.isEmpty) return 'Please enter your phone number';
+                  if (!RegExp(r'^(078|079|072|073)\d{6}$').hasMatch(value)) {
+                    return 'Phone number must start with 078, 079, 072, or 073 and be 10 digits long';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(

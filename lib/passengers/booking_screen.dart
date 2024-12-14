@@ -47,7 +47,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _fetchLocations() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/locations'),
+        Uri.parse('http://192.168.149.59:5000/locations'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -79,7 +79,7 @@ class _BookingScreenState extends State<BookingScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.8.104:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
+            'http://192.168.149.59:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -218,7 +218,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         leading: CircleAvatar(
                           radius: 35.0, // Increased radius for a bigger image
                           backgroundImage: NetworkImage(
-                           'http://192.168.8.104:5000${driver['profile_picture']}' ?? 'assets/default_profile_picture.jpg',
+                           'http://192.168.149.59:5000${driver['profile_picture']}' ?? 'assets/default_profile_picture.jpg',
                           ),
                         ),
                         title: Text(driver['name']),

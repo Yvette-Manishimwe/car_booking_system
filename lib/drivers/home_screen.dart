@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/trips'),
+        Uri.parse('http://192.168.149.59:5000/trips'),
         headers: {
           'Authorization': 'Bearer $token', // Include the token in the request header
         },

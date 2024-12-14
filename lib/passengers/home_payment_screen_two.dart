@@ -51,7 +51,7 @@ class _HomePaymentScreenTwoState extends State<HomePaymentScreenTwo> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/bookings'),
+        Uri.parse('http://192.168.149.59:5000/bookings'),
         headers: {'Authorization': 'Bearer $token'},
       );
 

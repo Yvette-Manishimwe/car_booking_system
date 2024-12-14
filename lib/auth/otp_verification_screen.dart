@@ -32,7 +32,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.8.104:5000/verify-otp'), // Adjust the URL if needed
+        Uri.parse('http://192.168.149.59:5000/verify-otp'), // Adjust the URL if needed
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpData),
       );
@@ -44,33 +44,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         final String? token = responseData['token'];
-        final dynamic passengerId = responseData['passenger_id'];  // passenger_id can be dynamic (int or String)
+        final dynamic passengerId = responseData['passenger_id'];
 
         if (token != null) {
           await _storage.write(key: 'token', value: token);
 
-          // Convert passenger_id to String before storing
           if (passengerId != null) {
             await _storage.write(
               key: 'passenger_id',
-              value: passengerId.toString(),  // Convert int to String
+              value: passengerId.toString(),
             );
           }
 
-          // Decode the JWT token to get the payload
           final payload = token.split('.')[1];
-
-          // Ensure the payload length is a multiple of 4
           final String normalizedPayload = _normalizeBase64Url(payload);
-
-          // Decode the payload
           final decodedPayload = convert.utf8.decode(base64Url.decode(normalizedPayload));
           final Map<String, dynamic> decodedData = json.decode(decodedPayload);
 
-          // Extract the role (category) from the decoded payload
-          final String role = decodedData['category']; // Ensure the key 'category' exists in the token payload
+          final String role = decodedData['category'];
 
-          // Redirect based on role (driver or passenger)
           if (role == 'Driver') {
             Navigator.of(context).pushReplacementNamed('/');
           } else if (role == 'Passenger') {
@@ -108,9 +100,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
-  // Function to add the correct padding to a base64 URL encoded string
   String _normalizeBase64Url(String base64Url) {
-    // Add padding to make the length a multiple of 4
     int paddingLength = 4 - (base64Url.length % 4);
     if (paddingLength != 4) {
       base64Url += '=' * paddingLength;
@@ -128,6 +118,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Text(
+                'Enter the 6-digit OTP sent to your email:',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: _otpController,
                 keyboardType: TextInputType.number,

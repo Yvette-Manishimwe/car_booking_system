@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'otp_verification_screen.dart'; // Import your OTP screen
 import 'signup_screen.dart'; // Import your SignUp screen
+import 'request_reset_password_screen.dart'; // Import your Request Reset Password screen
 
 class LoginsScreen extends StatefulWidget {
   const LoginsScreen({super.key});
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginsScreen> {
 
       // Send the login request to the API
       final response = await http.post(
-        Uri.parse('http://192.168.8.104:5000/login'), // Use your common login endpoint
+        Uri.parse('http://192.168.149.59:5000/login'), // Use your common login endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode(loginData),
       );
@@ -146,7 +147,22 @@ class _LoginScreenState extends State<LoginsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    RequestResetPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('Forgot your password? Reset'),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       if (_errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),

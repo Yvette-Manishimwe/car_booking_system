@@ -28,7 +28,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/driver-notifications'),
+        Uri.parse('http://192.168.149.59:5000/driver-notifications'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.post(
-        Uri.parse('http://192.168.8.104:5000/send-message'),
+        Uri.parse('http://192.168.149.59:5000/send-message'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

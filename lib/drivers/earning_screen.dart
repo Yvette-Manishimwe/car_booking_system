@@ -32,7 +32,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
       if (token == null) throw Exception('No auth token found');
 
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/earnings'),
+        Uri.parse('http://192.168.149.59:5000/earnings'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
       if (token == null) throw Exception('No auth token found');
 
       final response = await http.get(
-        Uri.parse('http://192.168.8.104:5000/earnings-reminders'),
+        Uri.parse('http://192.168.149.59:5000/earnings-reminders'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
