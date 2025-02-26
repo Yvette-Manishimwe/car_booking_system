@@ -4,6 +4,7 @@ class NotificationModel {
   final int passengerId;
   final String passengerName;
   final String passengerPhone;
+  final String passengerEmail;
   final String message;
   final String timestamp;
   final String departure;
@@ -16,6 +17,7 @@ class NotificationModel {
     required this.passengerId,
     required this.passengerName,
     required this.passengerPhone,
+    required this.passengerEmail,
     required this.message,
     required this.timestamp,
     required this.departure,
@@ -29,6 +31,7 @@ class NotificationModel {
       tripId: json['trip_id'] != null ? json['trip_id'] as int : 0,
       passengerId: json['passenger_id'] != null ? json['passenger_id'] as int : 0,
       passengerName: json['passenger_name'] ?? 'Unknown Passenger',
+      passengerEmail: json['passenger_email'] ?? 'Unknown Email',
       passengerPhone: json['passenger_phone'] ?? 'Unknown Phone',
       departure: json['departure_location'] ?? 'Unknown Location',
       destination: json['destination'] ?? 'Unknown Destination',

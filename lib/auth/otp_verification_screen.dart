@@ -32,7 +32,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.149.59:5000/verify-otp'), // Adjust the URL if needed
+        Uri.parse('http://10.151.247.59:5000/verify-otp'), // Adjust the URL if needed
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpData),
       );

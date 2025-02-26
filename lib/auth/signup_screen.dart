@@ -23,7 +23,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _selectedCategory = 'Passenger';
   File? _profileImage;
 
-  final String baseUrl = 'http://192.168.149.59:5000'; // Base URL for backend
+  final String baseUrl = 'http://10.151.247.59:5000'; // Base URL for backend
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {

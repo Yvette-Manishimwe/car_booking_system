@@ -32,7 +32,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
       if (token == null) throw Exception('No auth token found');
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/earnings'),
+        Uri.parse('http://10.151.247.59:5000/earnings'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
       if (token == null) throw Exception('No auth token found');
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/earnings-reminders'),
+        Uri.parse('http://10.151.247.59:5000/earnings-reminders'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Earnings')),
+        appBar: AppBar(title: const Text('Ratings')),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
             : Padding(
@@ -164,8 +164,8 @@ class _EarningsScreenState extends State<EarningsScreen> {
               label: 'Add Trip',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.monetization_on),
-              label: 'Earnings',
+              icon: Icon(Icons.star_border_outlined),
+              label: 'Ratings',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications),

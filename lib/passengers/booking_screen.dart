@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'booking_confirmation_screen.dart';
+import 'package:intl/intl.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -32,11 +33,13 @@ class _BookingScreenState extends State<BookingScreen> {
       final storage = FlutterSecureStorage();
       String? passengerId = await storage.read(key: 'passenger_id');
       setState(() {
-        _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
+        _loggedInPassengerId =
+            passengerId != null ? int.parse(passengerId) : null;
       });
       if (_loggedInPassengerId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
+          const SnackBar(
+              content: Text('Passenger ID not found. Please log in again.')),
         );
       }
     } catch (e) {
@@ -47,7 +50,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Future<void> _fetchLocations() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/locations'),
+        Uri.parse('http://10.151.247.59:5000/locations'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -64,52 +67,55 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  Future<void> _fetchAvailableDrivers() async {
-    if (_selectedDepartureLocation == null || _selectedDestination == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both locations')),
-      );
-      return;
-    }
+Future<void> _fetchAvailableDrivers() async {
+  if (_selectedDepartureLocation == null || _selectedDestination == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please select both locations')),
+    );
+    return;
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      final response = await http.get(
-        Uri.parse(
-            'http://192.168.149.59:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
-        headers: {'Content-Type': 'application/json'},
-      );
+  try {
+    final response = await http.get(
+      Uri.parse(
+          'http://10.151.247.59:5000/available_drivers?departure_location=$_selectedDepartureLocation&destination=$_selectedDestination'),
+      headers: {'Content-Type': 'application/json'},
+    );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _availableDrivers = data['drivers'];
-          _isLoading = false;
-        });
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      
+      setState(() {
+        _availableDrivers = data['drivers'];
+        _isLoading = false;
+      });
 
-        if (_availableDrivers.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No drivers available for this route')),
-          );
-        }
-      } else {
-        print('Failed to load available drivers');
-        setState(() {
-          _isLoading = false;
-        });
+      if (data.containsKey('message')) {
+        // Show the backend message when no drivers are available
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'])),
+        );
       }
-    } catch (e) {
-      print('Error fetching available drivers: $e');
+    } else {
+      print('Failed to load available drivers');
       setState(() {
         _isLoading = false;
       });
     }
+  } catch (e) {
+    print('Error fetching available drivers: $e');
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
-    // Handle navigation when a BottomNavigationBar item is tapped
+
+  // Handle navigation when a BottomNavigationBar item is tapped
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index; // Update the selected index
@@ -150,9 +156,15 @@ class _BookingScreenState extends State<BookingScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
+        const SnackBar(
+            content: Text('Passenger ID not found. Please log in again.')),
       );
     }
+  }
+
+  String formatDateTime(String dateTime) {
+    DateTime parsedDate = DateTime.parse(dateTime);
+    return DateFormat('yyyy-MM-dd HH:mm').format(parsedDate);
   }
 
   @override
@@ -179,10 +191,10 @@ class _BookingScreenState extends State<BookingScreen> {
                   _selectedDepartureLocation = value;
                 });
               },
-              decoration: const InputDecoration(labelText: 'Departure Location'),
+              decoration:
+                  const InputDecoration(labelText: 'Departure Location'),
             ),
             const SizedBox(height: 16),
-
             DropdownButtonFormField<String>(
               value: _selectedDestination,
               hint: const Text('Select Destination'),
@@ -200,13 +212,11 @@ class _BookingScreenState extends State<BookingScreen> {
               decoration: const InputDecoration(labelText: 'Destination'),
             ),
             const SizedBox(height: 16),
-
             ElevatedButton(
               onPressed: _fetchAvailableDrivers,
               child: const Text('Find Available Drivers'),
             ),
             const SizedBox(height: 20),
-
             _isLoading
                 ? const CircularProgressIndicator()
                 : ListView.builder(
@@ -218,14 +228,20 @@ class _BookingScreenState extends State<BookingScreen> {
                         leading: CircleAvatar(
                           radius: 35.0, // Increased radius for a bigger image
                           backgroundImage: NetworkImage(
-                           'http://192.168.149.59:5000${driver['profile_picture']}' ?? 'assets/default_profile_picture.jpg',
+                            'http://10.151.247.59:5000${driver['profile_picture']}' ??
+                                'assets/default_profile_picture.jpg',
                           ),
                         ),
                         title: Text(driver['name']),
                         subtitle: Text(
-                            'Plate: ${driver['plate_number']} - Time: ${driver['trip_time']}'),
+                          'Plate: ${driver['plate_number']} , '
+                          'Time: ${formatDateTime(driver['trip_time'])}, ' // Formatting the time
+                          'Destination: ${driver['destination']}, '
+                          'Departure: ${driver['departure_location']}',
+                        ),
                         trailing: ElevatedButton(
-                          onPressed: () => _navigateToBookingConfirmationScreen(driver),
+                          onPressed: () =>
+                              _navigateToBookingConfirmationScreen(driver),
                           child: const Text('Book'),
                         ),
                       );

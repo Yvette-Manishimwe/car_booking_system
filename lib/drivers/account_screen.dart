@@ -37,7 +37,7 @@ class _AccountScreenState extends State<AccountScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/driver-details'),
+        Uri.parse('http://10.151.247.59:5000/driver-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ class _AccountScreenState extends State<AccountScreen> {
           phone = data['phone'];
           category = data['category'];
           profilePictureUrl = data['profile_picture'] != null 
-              ? 'http://192.168.149.59:5000${data['profile_picture']}'  // Replace with your actual IP address
+              ? 'http://:5000${data['profile_picture']}'  // Replace with your actual IP address
                 : '';
           isLoading = false;
         });
@@ -240,8 +240,8 @@ class _AccountScreenState extends State<AccountScreen> {
               label: 'Add Trip',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.monetization_on),
-              label: 'Earnings',
+              icon: Icon(Icons.star_border_outlined),
+              label: 'Ratings',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications),

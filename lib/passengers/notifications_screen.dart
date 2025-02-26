@@ -30,7 +30,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/get_notifications'), // Updated URL
+        Uri.parse('http://10.151.247.59:5000/get_notifications'), // Updated URL
         headers: {'Authorization': 'Bearer $token'},
       );
 

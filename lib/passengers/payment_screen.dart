@@ -44,7 +44,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('http://192.168.149.59:5000/check_rating?booking_id=${widget.bookingId}'),
+      Uri.parse('http://10.151.247.59:5000/check_rating?booking_id=${widget.bookingId}'),
       headers: {
         'Authorization': 'Bearer $token',
       },

@@ -37,7 +37,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/passenger-details'),
+        Uri.parse('http://10.151.247.59:5000/passenger-details'),
         headers: {
           'Authorization': 'Bearer $token', // Use the token from secure storage
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
           passengerPhone = data['phone'] ?? 'No Phone Available';
           passengerCategory = data['category'] ?? 'No Category Available';
           passengerProfilePictureUrl = data['profile_picture'] != null 
-              ? 'http://192.168.149.59:5000/${data['profile_picture']}'  // Replace with your actual IP address
+              ? 'http://10.151.247.59:5000/${data['profile_picture']}'  // Replace with your actual IP address
               : ''; // Make sure to set it as empty if no profile picture URL is found
           isLoading = false;
         });

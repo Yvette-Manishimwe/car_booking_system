@@ -54,7 +54,7 @@ class _UploadProofScreenState extends State<UploadProofScreen> {
     String? token = await _storage.read(key: 'token');
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.149.59:5000/upload_proof/${widget.bookingId}'),
+      Uri.parse('http://10.151.247.59:5000/upload_proof/${widget.bookingId}'),
     );
     request.headers['Authorization'] = 'Bearer $token';
     request.files.add(await http.MultipartFile.fromPath(
@@ -87,7 +87,7 @@ class _UploadProofScreenState extends State<UploadProofScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.post(
-      Uri.parse('http://192.168.149.59:5000/verify_payment/${widget.bookingId}'),
+      Uri.parse('http://10.151.247.59:5000/verify_payment/${widget.bookingId}'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -109,7 +109,7 @@ class _UploadProofScreenState extends State<UploadProofScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse('http://192.168.149.59:5000/check_rating?booking_id=${widget.bookingId}'),
+      Uri.parse('http://10.151.247.59:5000/check_rating?booking_id=${widget.bookingId}'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -136,7 +136,7 @@ class _UploadProofScreenState extends State<UploadProofScreen> {
     String? token = await _storage.read(key: 'token');
 
     final response = await http.post(
-      Uri.parse('http://192.168.149.59:5000/rate_driver'),
+      Uri.parse('http://10.151.247.59:5000/rate_driver'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

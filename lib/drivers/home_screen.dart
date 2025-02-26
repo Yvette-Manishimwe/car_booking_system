@@ -3,6 +3,7 @@ import 'package:drivers_app/drivers/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // For storing and retrieving the token
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/trips'),
+        Uri.parse('http://10.151.247.59:5000/trips'),
         headers: {
           'Authorization': 'Bearer $token', // Include the token in the request header
         },
@@ -65,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+
 
     String routeName;
     switch (index) {
@@ -119,8 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Add Trip',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.monetization_on),
-            label: 'Earnings',
+            icon: Icon(Icons.star_border_outlined),
+            label: 'Ratings',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),

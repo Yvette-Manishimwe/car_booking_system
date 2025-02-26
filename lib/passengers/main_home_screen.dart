@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class MainHomeScreen extends StatefulWidget {
-  const MainHomeScreen({super.key});
+  const MainHomeScreen({Key? key}) : super(key: key);
 
   @override
   _MainHomeScreenState createState() => _MainHomeScreenState();
@@ -14,64 +14,57 @@ class MainHomeScreen extends StatefulWidget {
 class _MainHomeScreenState extends State<MainHomeScreen> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   bool isLoading = true;
-  List trips = []; // List to store trips data
+  List trips = [];
   int? _loggedInPassengerId;
-  int _currentIndex = 0; // Track the current tab index
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    fetchAvailableTrips();
     _fetchLoggedInPassengerId();
+    _fetchAvailableTrips();
   }
 
   Future<void> _fetchLoggedInPassengerId() async {
     try {
-      // Retrieve the passenger ID from secure storage
       final String? passengerId = await _storage.read(key: 'passenger_id');
       setState(() {
         _loggedInPassengerId = passengerId != null ? int.parse(passengerId) : null;
       });
-
       if (_loggedInPassengerId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
-        );
+        _showSnackbar('Passenger ID not found. Please log in again.');
       }
     } catch (e) {
-      print('Error fetching passenger ID: $e');
+      debugPrint('Error fetching passenger ID: $e');
     }
   }
 
-  Future<void> fetchAvailableTrips() async {
+  Future<void> _fetchAvailableTrips() async {
     try {
-      // Retrieve the token from secure storage
       final String? token = await _storage.read(key: 'token');
-
       if (token == null) {
         throw Exception('No auth token found');
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/available-trips'),
+        Uri.parse('http://10.151.247.59:5000/available-trips'),
         headers: {
-          'Authorization': 'Bearer $token', // Use the token from secure storage
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
         setState(() {
-          trips = data;
+          trips = json.decode(response.body);
           isLoading = false;
         });
       } else {
         throw Exception('Failed to load available trips');
       }
     } catch (e) {
-      print('Error fetching trips: $e');
-      Fluttertoast.showToast(msg: "Error fetching trips. Please try again.");
+      debugPrint('Error fetching trips: $e');
+      Fluttertoast.showToast(msg: 'Error fetching trips. Please try again.');
       setState(() {
         isLoading = false;
       });
@@ -80,15 +73,12 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   void _onBookButtonPressed(int tripId) {
     if (_loggedInPassengerId != null) {
-      // Navigate to the booking screen with the selected trip ID and passenger ID
-      Navigator.pushNamed(
-        context,
-        '/booking',
-      );
+      Navigator.pushNamed(context, '/booking', arguments: {
+        'tripId': tripId,
+        'passengerId': _loggedInPassengerId,
+      });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passenger ID not found. Please log in again.')),
-      );
+      _showSnackbar('Passenger ID not found. Please log in again.');
     }
   }
 
@@ -97,25 +87,25 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       _currentIndex = index;
     });
 
-    switch (index) {
-      case 0:
-        // Stay on current page (Home)
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/booking');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/payment');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/notification');
-        break;
-      case 4:
-        Navigator.pushNamed(context, '/profile');
-        break;
-      default:
-        break;
+    final routes = ['/home', '/booking', '/payment', '/notification', '/profile'];
+    if (index < routes.length) {
+      Navigator.pushNamed(context, routes[index]);
     }
+  }
+
+  String _formatDepartureTime(String isoTime) {
+    try {
+      final DateTime parsedTime = DateTime.parse(isoTime);
+      return '${parsedTime.year}-${parsedTime.month.toString().padLeft(2, '0')}-${parsedTime.day.toString().padLeft(2, '0')} '
+          '${parsedTime.hour.toString().padLeft(2, '0')}:${parsedTime.minute.toString().padLeft(2, '0')}:${parsedTime.second.toString().padLeft(2, '0')}';
+    } catch (e) {
+      debugPrint('Error formatting time: $e');
+      return isoTime;
+    }
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -126,42 +116,45 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: trips.length,
-              itemBuilder: (context, index) {
-                var trip = trips[index];
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(15),
-                    title: Text(
-                      'Destination: ${trip['destination']}',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Departure Time: ${trip['departure_time']}'),
-                        Text('Available Seats: ${trip['available_seats']}'),
-                        Text(
-                          'Driver: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+          : trips.isEmpty
+              ? const Center(child: Text('No available trips found.'))
+              : ListView.builder(
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    final trip = trips[index];
+                    return Card(
+                      margin: const EdgeInsets.all(10),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(15),
+                        title: Text(
+                          'Destination: ${trip['destination']}',
+                          style: const TextStyle(fontSize: 20),
                         ),
-                        Text(
-                          '${trip['driver_name']}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Departure: ${trip['departure_location']}'),
+                            Text('Departure Time: ${_formatDepartureTime(trip['departure_time'])}'),
+                            Text('Available Seats: ${trip['available_seats']}'),
+                            const Text(
+                              'Driver:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '${trip['driver_name']}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text('Contact: ${trip['driver_phone']}'),
+                          ],
                         ),
-                        Text('Contact: ${trip['driver_phone']}'),
-                      ],
-                    ),
-                    trailing: ElevatedButton(
-                      onPressed: () => _onBookButtonPressed(trip['trip_id']),
-                      child: const Text('Book'),
-                    ),
-                  ),
-                );
-              },
-            ),
+                        trailing: ElevatedButton(
+                          onPressed: () => _onBookButtonPressed(trip['trip_id']),
+                          child: const Text('Book'),
+                        ),
+                      ),
+                    );
+                  },
+                ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(

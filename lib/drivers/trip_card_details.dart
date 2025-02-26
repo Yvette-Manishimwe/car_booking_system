@@ -26,7 +26,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final String token = await storage.read(key: 'token') ?? '';
 
     final response = await http.get(
-      Uri.parse('http://192.168.149.59:5000/trip-details/$tripId'),
+      Uri.parse('http://10.151.247.59:5000/trip-details/$tripId'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -68,7 +68,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         Text('Trip Time: ${details.tripTime}', style: const TextStyle(fontSize: 16)),
                         Text('Plate Number: ${details.plateNumber}', style: const TextStyle(fontSize: 16)),
                         Text('Available Seats: ${details.availableSeats}', style: const TextStyle(fontSize: 16)),
-                        Text('Amount: \$${details.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+                        // Text('Amount: \$${details.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
                         Text('Date Created: ${details.dateCreated}', style: const TextStyle(fontSize: 16)),
                         const SizedBox(height: 20),
                         const Text('Passengers:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

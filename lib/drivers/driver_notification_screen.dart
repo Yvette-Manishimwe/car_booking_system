@@ -28,7 +28,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.get(
-        Uri.parse('http://192.168.149.59:5000/driver-notifications'),
+        Uri.parse('http://10.151.247.59:5000/driver-notifications'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
     try {
       final String? token = await _storage.read(key: 'token');
       final response = await http.post(
-        Uri.parse('http://192.168.149.59:5000/send-message'),
+        Uri.parse('http://10.151.247.59:5000/send-message'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -97,6 +97,7 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Passenger: ${notification.passengerName}'),
+              Text('Email: ${notification.passengerEmail}'),
               Text('Phone: ${notification.passengerPhone}'),
               Text('From: ${notification.departure}'),
               Text('To: ${notification.destination}'),
@@ -205,8 +206,8 @@ class _DriverNotificationScreenState extends State<DriverNotificationScreen> {
               label: 'Add Trip',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.monetization_on),
-              label: 'Earnings',
+              icon: Icon(Icons.star_border_outlined),
+              label: 'Ratings',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications),

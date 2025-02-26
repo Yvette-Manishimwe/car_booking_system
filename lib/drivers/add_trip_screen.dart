@@ -15,7 +15,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _plateNumberController = TextEditingController();
   final TextEditingController _tripTimeController = TextEditingController();
-  final TextEditingController _availableSeatsController = TextEditingController();
+  final TextEditingController _availableSeatsController =
+      TextEditingController();
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -37,7 +38,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
   Future<void> _fetchLocations() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.149.59:5000/locations'));
+      final response =
+          await http.get(Uri.parse('http://10.151.247.59:5000/locations'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -105,7 +107,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
         };
 
         final response = await http.post(
-          Uri.parse('http://192.168.149.59:5000/add_trip'),
+          Uri.parse('http://10.151.247.59:5000/add_trip'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -145,34 +147,47 @@ class _AddTripScreenState extends State<AddTripScreen> {
     }
   }
 
-  Future<void> _selectDateTime() async {
-    DateTime? pickedDate = await showDatePicker(
+Future<void> _selectDateTime() async {
+  DateTime now = DateTime.now();
+
+  DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: now,
+    firstDate: now, // Prevent selecting past dates
+    lastDate: DateTime(2101),
+  );
+
+  if (pickedDate != null) {
+    TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      initialTime: TimeOfDay.now(),
     );
 
-    if (pickedDate != null) {
-      TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
+    if (pickedTime != null) {
+      DateTime combinedDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
       );
 
-      if (pickedTime != null) {
-        final DateTime combinedDateTime = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          pickedTime.hour,
-          pickedTime.minute,
+      // Ensure the selected datetime is in the future
+      if (combinedDateTime.isAfter(now)) {
+        final formattedDateTime = DateFormat('yyyy-MM-dd HH:mm').format(combinedDateTime);
+        setState(() {
+          _tripTimeController.text = formattedDateTime;
+        });
+      } else {
+        // Show error if user selects a past time
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a future time.')),
         );
-
-        final formattedDateTime = DateFormat('yy-MM-dd HH:mm').format(combinedDateTime);
-        _tripTimeController.text = formattedDateTime;
       }
     }
   }
+}
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -181,10 +196,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
 
     switch (index) {
       case 0:
-         Navigator.pushReplacementNamed(context, '/');
+        Navigator.pushReplacementNamed(context, '/');
         break;
       case 1:
-         Navigator.pushReplacementNamed(context, '/add-trip');
+        Navigator.pushReplacementNamed(context, '/add-trip');
         break;
       case 2:
         Navigator.pushNamed(context, '/earning');
@@ -240,18 +255,26 @@ class _AddTripScreenState extends State<AddTripScreen> {
                               child: Text(location),
                             ))
                         .toList(),
-                    decoration: const InputDecoration(labelText: 'Departure Location'),
+                    decoration:
+                        const InputDecoration(labelText: 'Departure Location'),
                     onChanged: (value) {
                       setState(() {
                         _selectedDeparture = value;
+                        _selectedDestination =
+                            null; // Reset destination when departure changes
                       });
                     },
-                    validator: (value) => value == null ? 'Please select departure location' : null,
+                    validator: (value) => value == null
+                        ? 'Please select departure location'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedDestination,
                     items: _locations
+                        .where((location) =>
+                            location !=
+                            _selectedDeparture) // Filter out departure
                         .map((location) => DropdownMenuItem(
                               value: location,
                               child: Text(location),
@@ -263,7 +286,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
                         _selectedDestination = value;
                       });
                     },
-                    validator: (value) => value == null ? 'Please select destination' : null,
+                    validator: (value) =>
+                        value == null ? 'Please select destination' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -285,7 +309,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _availableSeatsController,
-                    decoration: const InputDecoration(labelText: 'Available Seats'),
+                    decoration:
+                        const InputDecoration(labelText: 'Available Seats'),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -317,8 +342,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
               label: 'Add Trip',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.monetization_on),
-              label: 'Earnings',
+              icon: Icon(Icons.star_border_outlined),
+              label: 'Ratings',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications),

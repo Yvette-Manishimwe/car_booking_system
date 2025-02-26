@@ -25,7 +25,7 @@ Future<void> _resetPassword() async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://192.168.149.59:5000/reset_password'),
+      Uri.parse('http://10.151.247.59:5000/reset_password'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'email': widget.email,

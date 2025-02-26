@@ -23,7 +23,7 @@ class _RequestResetPasswordScreenState
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.149.59:5000/request_reset_password'),
+        Uri.parse('http://10.151.247.59:5000/request_reset_password'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': _emailController.text}),
       );
@@ -92,7 +92,7 @@ class _RequestResetPasswordScreenState
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _requestResetPassword,
-                    child: const Text('Send Email'),
+                    child: const Text('Send Code'),
                   ),
           ],
         ),

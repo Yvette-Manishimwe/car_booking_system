@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginsScreen> {
 
       // Send the login request to the API
       final response = await http.post(
-        Uri.parse('http://192.168.149.59:5000/login'), // Use your common login endpoint
+        Uri.parse('http://10.151.247.59:5000/login'), // Use your common login endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode(loginData),
       );
